@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    {% for tut in tutorials %}
+        <p>{{ tut.title }}</p>
+        <p>{{ tut.published }}</p>
+        <p>{{ tut.content }}</p>
+
+        <br><br>
+    {% endfor %}
+</body>
+</html>
