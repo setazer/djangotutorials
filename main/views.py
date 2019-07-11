@@ -1,16 +1,45 @@
 from django.contrib.auth import authenticate, logout, login
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib import messages
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from .forms import NewUserForm
 # Create your views here.
-from main.models import Tutorial
+from main.models import Tutorial, TutorialSeries, TutorialCategory
+
+
+def single_slug(request,single_slug):
+    categories = [c.slug for c in TutorialCategory.objects.all()]
+    if single_slug in categories:
+        matching_series = TutorialSeries.objects.filter(category__slug=single_slug)
+        series_urls={}
+        for m in matching_series.all():
+            part_one = Tutorial.objects.filter(series__series=m.series).earliest('published')
+            series_urls[m] = part_one.slug
+        return render(request,
+                      "main/category.html",
+                      {'part_ones': series_urls})
+
+    tutorials = [t.slug for t in Tutorial.objects.all()]
+    if single_slug in tutorials:
+        this_tutorial = Tutorial.objects.get(slug=single_slug)
+        series_tutorials = Tutorial.objects.filter(series__series=this_tutorial.series).order_by('published')
+        this_tutorial_idx = list(series_tutorials).index(this_tutorial)
+
+        return render(request,
+                      "main/tutorial.html",
+                      {'tutorial': this_tutorial,
+                       "sidebar": series_tutorials,
+                       'this_tutorial_idx': this_tutorial_idx})
+
+    return HttpResponse(f"{single_slug} does not correspond to anything.")
+
 
 
 def homepage(request):
     return render(request=request,
-                  template_name='main/home.html',
-                  context={'tutorials': Tutorial.objects.all})
+                  template_name='main/categories.html',
+                  context={'categories': TutorialCategory.objects.all})
 
 
 def register(request):
